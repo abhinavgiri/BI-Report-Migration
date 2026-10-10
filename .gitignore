@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+.scannerwork/
+
+# --- Editors ---
+.idea/
+.vscode/
+*.swp
+
+# --- Office / Tableau lock and temp files ---
+~$*
+*.twbr
+*.tmp
+
+# --- Generated output: CONTAINS REAL BUSINESS DATA when snapshots are used ---
+# The snapshot CSVs hold rows evaluated from your Power BI model. Never publish them.
+output/*
+!output/.gitkeep
+
+# --- Uploaded reports: someone else's data, never publish ---
+input/uploads/
+
+# Only the two public Microsoft sample reports belong in input/.
+# If you put your own .pbix there, add it here too, e.g.:
+# input/My_Private_Report.pbix
+
+# --- Local editor / agent config, not part of the project ---
+.claude/

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" data-theme="ocean" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BI Migration Assistant</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230ea5e9'/%3E%3Cpath d='M18 40l10-14 8 9 10-16' fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <div>
+      <div class="brand-name">BI Migration Assistant</div>
+      <div class="brand-sub">Power BI <span class="arrow">→</span> Tableau</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="segment themes" role="radiogroup" aria-label="Colour theme">
+      <button data-theme-pick="emerald" title="Emerald"><i style="--sw:#10b981"></i>Emerald</button>
+      <button data-theme-pick="sunset" title="Sunset"><i style="--sw:#f97316"></i>Sunset</button>
+      <button data-theme-pick="ocean" title="Ocean"><i style="--sw:#0ea5e9"></i>Ocean</button>
+      <button data-theme-pick="sakura" title="Sakura"><i style="--sw:#ec4899"></i>Sakura</button>
+    </div>
+    <button id="modeBtn" class="icon-btn" title="Toggle light / dark" aria-label="Toggle light or dark mode">
+      <svg class="sun" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" width="18" height="18"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="motionBtn" class="icon-btn" title="Reduce motion" aria-label="Toggle background animation" aria-pressed="false">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 12c3-6 6-6 9 0s6 6 9 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <div class="eyebrow"><span class="dot"></span> Local · nothing leaves this machine</div>
+    <h1>Move a Power BI report to Tableau, <em>honestly</em>.</h1>
+    <p>Drop one <code>.pbix</code> or a whole folder of them. Every visual gets a verdict and a reason, every measure gets a translation or a refusal, and you get a workbook that opens in Tableau — with nothing invented.</p>
+  </section>
+
+  <section class="grid">
+    <div class="card analyze">
+      <div class="card-head">
+        <h2>Analyze reports</h2>
+        <span class="muted">.pbix in → assessment + workbook out</span>
+      </div>
+
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Drop .pbix files or click to browse">
+        <input type="file" id="fileInput" accept=".pbix" multiple hidden>
+        <div class="drop-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 16V4m0 0l-4 4m4-4l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="drop-text"><strong>Drop .pbix files here</strong> or click to browse</div>
+        <div class="drop-sub muted">one at a time, or many at once</div>
+      </div>
+
+      <div class="queue-head" id="queueHead" hidden>
+        <span id="queueCount">0 files</span>
+        <button class="ghost small danger" id="clearBtn">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Clear all
+        </button>
+      </div>
+      <ul class="queue" id="queue"></ul>
+
+      <div class="or"><span>or add a sample from <code>input/</code></span></div>
+      <div class="field">
+        <select id="inputSelect" aria-label="Add an input file to the queue"><option value="">Loading…</option></select>
+      </div>
+
+      <div class="options">
+        <div class="field">
+          <label>Measure definitions (model)</label>
+          <div class="segment" role="radiogroup" aria-label="Model source">
+            <button data-model="none" class="on">Not needed</button>
+            <button data-model="live" id="liveBtn">Power BI Desktop (live)</button>
+            <button data-model="dir">DMV folder</button>
+          </div>
+          <div class="hint" id="modelHint">Report structure only. Measures become labelled placeholders in Tableau.</div>
+          <input id="modelDir" class="text" placeholder="Folder with TMSCHEMA_*.json, e.g. tests\fixtures\dmv" hidden>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="genTwb" checked>
+          <span class="knob"></span>
+          <span>Generate the Tableau workbook (.twb + data stub)</span>
+        </label>
+        <label class="toggle" title="Evaluates every visual's own query in the open Power BI Desktop and ships the rows with the workbook, so the charts draw with real numbers">
+          <input type="checkbox" id="dataLive">
+          <span class="knob"></span>
+          <span>Include data snapshots <span class="muted">so the charts draw with real numbers</span></span>
+        </label>
+        <div class="req" id="desktopReq"><span class="rdot"></span><span id="desktopText">checking Power BI Desktop…</span></div>
+        <div class="field" id="snapFilters" style="margin-top:10px" hidden>
+          <label>Filters applied to snapshots</label>
+          <div class="segment" role="radiogroup" aria-label="Snapshot filters">
+            <button data-snap="all" class="on">All (what Power BI shows)</button>
+            <button data-snap="visual">Visual-level only</button>
+            <button data-snap="none">None (raw grain)</button>
+          </div>
+          <div class="hint">Report/page filters that depend on today's date (e.g. "last 6 months") can leave visuals empty in Power BI itself; choose <b>None</b> to snapshot the full data instead.</div>
+        </div>
+      </div>
+
+      <button class="primary" id="runBtn">
+        <span class="fill" aria-hidden="true"></span>
+        <span class="btn-label">Run migration analysis</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
+
+      <ol class="steps" id="steps" aria-live="polite">
+        <li data-step="parse"><b>Parse</b><small>unzip · decode layout</small></li>
+        <li data-step="assess"><b>Assess</b><small>verdict per visual</small></li>
+        <li data-step="translate"><b>Translate</b><small>DAX subset → Tableau</small></li>
+        <li data-step="build"><b>Build</b><small>.twb + dashboards</small></li>
+      </ol>
+    </div>
+
+    <div class="card runs">
+      <div class="card-head">
+        <h2>Previous runs</h2>
+        <button class="ghost small" id="refreshRuns">Refresh</button>
+      </div>
+      <ul class="run-list" id="runList"><li class="muted">No runs yet.</li></ul>
+    </div>
+  </section>
+
+  <section id="results" class="results" hidden>
+    <div class="results-head">
+      <div>
+        <div class="eyebrow">Assessment</div>
+        <h2 id="resTitle">—</h2>
+        <div class="muted" id="resMeta"></div>
+      </div>
+      <div class="downloads" id="downloads"></div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><span class="k" id="tPages">0</span><span class="l">Pages</span></div>
+      <div class="tile"><span class="k" id="tContainers">0</span><span class="l">Containers</span></div>
+      <div class="tile"><span class="k" id="tData">0</span><span class="l">Data visuals</span></div>
+      <div class="tile accent"><span class="k" id="tPct">0%</span><span class="l">Generated automatically</span></div>
+      <div class="tile"><span class="k" id="tSheets">0</span><span class="l">Sheets / dashboards</span></div>
+      <div class="tile"><span class="k" id="tMeasures">—</span><span class="l">Measures translated</span></div>
+    </div>
+
+    <div class="verdict-row card">
+      <div class="donut" id="donut" role="img" aria-label="Verdict breakdown"><div class="hole"><b id="donutN">0</b><span>visuals</span></div></div>
+      <ul class="legend" id="legend"></ul>
+      <div class="model-note" id="modelNote"></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="visuals" role="tab">Visuals</button>
+      <button class="tab" data-tab="measures" role="tab">Measures</button>
+      <button class="tab" data-tab="filters" role="tab">Filters</button>
+      <button class="tab" data-tab="skipped" role="tab">Skipped</button>
+      <button class="tab" data-tab="files" role="tab">Files</button>
+    </div>
+
+    <div class="panel card" data-panel="visuals">
+      <div class="panel-tools">
+        <input id="visualSearch" class="text" placeholder="Filter by title, type, field…">
+        <label class="toggle small"><input type="checkbox" id="hideDeco" checked><span class="knob"></span><span>Hide decorative</span></label>
+      </div>
+      <div id="visualPages"></div>
+    </div>
+    <div class="panel card" data-panel="measures" hidden><div id="measures"></div></div>
+    <div class="panel card" data-panel="filters" hidden><div id="filters"></div></div>
+    <div class="panel card" data-panel="skipped" hidden><div id="skipped"></div></div>
+    <div class="panel card" data-panel="files" hidden><div id="files"></div></div>
+  </section>
+
+  <footer class="foot">
+    <span>Every number above comes from the file — nothing is invented. Unsupported visuals are listed, never dropped.</span>
+    <span class="muted env" id="footEnv"></span>
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/static/backgrounds.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

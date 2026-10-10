@@ -1,0 +1,16 @@
+﻿{
+    "ID":  305,
+    "TableID":  10,
+    "Name":  "Street Hierarchy",
+    "Description":  null,
+    "IsHidden":  false,
+    "State":  1,
+    "HierarchyStorageID":  807709,
+    "ModifiedTime":  "\/Date(1636479967573)\/",
+    "StructureModifiedTime":  "\/Date(1636367013613)\/",
+    "RefreshedTime":  "\/Date(1636479967573)\/",
+    "DisplayFolder":  null,
+    "HideMembers":  0,
+    "LineageTag":  "24a41aca-6c8c-4ec3-9ed2-28a29d29958f",
+    "SourceLineageTag":  null
+}
